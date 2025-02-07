@@ -1,0 +1,94 @@
+/* 保证整个页面充满视口且无滚动条 */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* 全局样式与背景渐变 */
+body {
+  font-family: 'Fira Code', monospace;
+  background: linear-gradient(135deg, #D5C63A, #FCBDC5);
+  display: flex;
+  flex-direction: column;
+  color: #333;
+}
+
+/* 头部区域 */
+header {
+  background: linear-gradient(90deg, #D5C63A, #FCBDC5);
+  color: #333;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  flex: 0 0 auto;
+}
+
+/* 主体区域，使用 flex 布局，并确保子项可正确收缩 */
+main {
+  flex: 1 1 auto;
+  display: flex;
+  padding: 10px;
+  gap: 10px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 公共面板样式 */
+.panel {
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* 输入区域 */
+.input-panel {
+  width: 35%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 图形展示区域 */
+.graph-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 复选框样式 */
+.toggle-container {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+.toggle-container input {
+  margin-right: 6px;
+}
+
+/* 代码风格的文本输入框 */
+textarea {
+  width: 100%;
+  flex: 0 0 40%;
+  resize: none;
+  padding: 10px;
+  font-size: 14px;
+  font-family: 'Fira Code', monospace;
+  background-color: #2d2d2d;
+  color: #e8e8e8;
+  border: 1px solid #FCBDC5;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* 网络图形容器，确保充满剩余空间 */
+#network {
+  flex: 1;
+  min-height: 0;
+  border: 2px solid #D5C63A;
+  border-radius: 8px;
+  background: #fafafa;
+}

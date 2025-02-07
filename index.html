@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>图论工具(简单版)</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- 使用 Fira Code 作为代码风格字体 -->
+  <link rel="icon" href="fav.png" type="image/jpeg">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <!-- 引入 vis-network 库 -->
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>图论工具(简单版)</h1>
+    <h2>Made By @<a href="https://github.com/Nijika-jia"> Nijikajia</a> </h2>
+  </header>
+  <main>
+    <!-- 数据输入区域 -->
+    <div class="panel input-panel">
+      <h2>输入图数据</h2>
+      <p>每行输入一条边的数据，格式：起点 终点 [权重]（权重可选）</p>
+      <div class="toggle-container">
+        <label>
+          <input type="checkbox" id="toggleDirected" checked>
+          有向图
+        </label>
+      </div>
+      <textarea id="graphData">1 2 8
+2 3
+3 4 5</textarea>
+    </div>
+    <!-- 图形展示区域 -->
+    <div class="panel graph-panel">
+      <div id="network"></div>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
