@@ -1396,40 +1396,86 @@ class GraphEditor {
     }
 
     hasCycle() {
+        if (this.nodes.length === 0) return false;
+
+        // 对于有向图和无向图使用不同的检测方法
+        return this.isDirected ? this.hasDirectedCycle() : this.hasUndirectedCycle();
+    }
+
+    // 添加有向图环检测方法
+    hasDirectedCycle() {
         const visited = new Set();
         const recursionStack = new Set();
 
-        const hasCycleDFS = (node, parent = null) => {
-            visited.add(node);
-
-            // 获取所有相邻节点
-            const neighbors = this.edges
-                .filter(e => e.from === node || e.to === node)
-                .map(e => e.from === node ? e.to : e.from);
-
-            for (const neighbor of neighbors) {
-                if (!visited.has(neighbor)) {
-                    if (hasCycleDFS(neighbor, node)) {
-                        return true;
-                    }
-                } else if (neighbor !== parent) {
-                    // 如果访问到了一个已访问的节点，且不是父节点，说明有环
-                    return true;
-                }
+        // 对每个未访问的节点进行DFS
+        for (const node of this.nodes) {
+            if (this.hasCycleUtil(node, visited, recursionStack)) {
+                return true;
             }
+        }
+        return false;
+    }
 
-            return false;
-        };
+    // DFS辅助方法
+    hasCycleUtil(node, visited, recursionStack) {
+        if (recursionStack.has(node)) {
+            return true; // 找到环
+        }
+
+        if (visited.has(node)) {
+            return false; // 已经检查过这个路径
+        }
+
+        visited.add(node);
+        recursionStack.add(node);
+
+        // 获取当前节点的所有出边
+        const outEdges = this.edges.filter(edge => edge.from === node);
+        
+        for (const edge of outEdges) {
+            if (this.hasCycleUtil(edge.to, visited, recursionStack)) {
+                return true;
+            }
+        }
+
+        recursionStack.delete(node); // 回溯时移除节点
+        return false;
+    }
+
+    // 无向图环检测方法
+    hasUndirectedCycle() {
+        const visited = new Set();
+        const parent = new Map();
 
         // 对每个未访问的节点进行DFS
         for (const node of this.nodes) {
             if (!visited.has(node)) {
-                if (hasCycleDFS(node)) {
+                if (this.hasUndirectedCycleUtil(node, visited, parent)) {
                     return true;
                 }
             }
         }
+        return false;
+    }
 
+    hasUndirectedCycleUtil(node, visited, parent) {
+        visited.add(node);
+
+        // 获取相邻节点
+        const neighbors = this.edges
+            .filter(edge => edge.from === node || edge.to === node)
+            .map(edge => edge.from === node ? edge.to : edge.from);
+
+        for (const neighbor of neighbors) {
+            if (!visited.has(neighbor)) {
+                parent.set(neighbor, node);
+                if (this.hasUndirectedCycleUtil(neighbor, visited, parent)) {
+                    return true;
+                }
+            } else if (neighbor !== parent.get(node)) {
+                return true;
+            }
+        }
         return false;
     }
 
