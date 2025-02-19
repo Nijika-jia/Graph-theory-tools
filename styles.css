@@ -329,4 +329,129 @@ body.dark-mode .github-link {
 
 body.dark-mode .github-link:hover {
     background: #FF7F5C;
+}
+
+/* 基础响应式设计 */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        margin: 10px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .toolbar-group {
+        flex-wrap: wrap;
+        padding-right: 0;
+        border-right: none;
+        border-bottom: 1px solid #E5E5E5;
+        padding-bottom: 10px;
+    }
+
+    .toolbar-group:last-child {
+        border-bottom: none;
+    }
+
+    .main-content {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .input-area {
+        width: auto;
+    }
+
+    .canvas-container {
+        height: 60vh;
+    }
+
+    .stats-panel {
+        width: auto;
+    }
+
+    button {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    select {
+        width: 100%;
+    }
+
+    .style-panel {
+        width: 90%;
+        right: 5%;
+        left: 5%;
+    }
+
+    .zoom-controls {
+        bottom: 10px;
+        right: 10px;
+    }
+
+    .zoom-controls button {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+}
+
+/* 添加触摸事件支持 */
+@media (hover: none) {
+    button:hover {
+        background: #FFFFFF;
+        color: #333333;
+    }
+
+    button:active {
+        background: #FF7F5C;
+        color: #FFFFFF;
+    }
+}
+
+/* 移动设备优化 */
+@media (max-width: 768px) {
+    .toolbar button {
+        min-height: 44px; /* 更大的触摸目标 */
+        font-size: 16px;
+    }
+
+    .zoom-controls button {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+    }
+
+    .input-area {
+        max-height: 30vh;
+        overflow-y: auto;
+    }
+
+    #graphData {
+        height: 100px;
+    }
+
+    .style-panel {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    /* 防止iOS上的橡皮筋效果 */
+    .canvas-container {
+        overflow: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* 禁用页面缩放 */
+@viewport {
+    width: device-width;
+    zoom: 1.0;
+    user-zoom: fixed;
 } 
