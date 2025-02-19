@@ -81,8 +81,7 @@
                 <input type="checkbox" id="directedEdge">
                 <label for="directedEdge">有向边</label>
                 <input type="number" id="weight" placeholder="边权重" min="0">
-                <input type="checkbox" id="darkMode">
-                <label for="darkMode">深色模式</label>
+                <button id="darkMode" class="theme-toggle" title="切换主题">🌞</button>
                 <button id="toggleStyle">样式设置</button>
                 <a href="https://github.com/Nijika-jia/Graph-theory-tools" 
                    target="_blank" 
@@ -104,6 +103,10 @@
                 </div>
                 <div class="input-group">
                     <label for="graphData">图数据:</label>
+                    <select id="inputFormat" style="margin-bottom: 5px;">
+                        <option value="edgeList">边列表 (u v w)</option>
+                        <option value="matrix">邻接矩阵</option>
+                    </select>
                     <textarea id="graphData" placeholder="每行输入两个数字表示边的连接关系&#10;例如:&#10;1 0&#10;2 1&#10;3 2"></textarea>
                 </div>
             </div>
@@ -113,7 +116,7 @@
                 <div class="zoom-controls">
                     <button id="zoomIn" title="放大">+</button>
                     <button id="zoomOut" title="缩小">-</button>
-                    <button id="resetView" title="重置视图">重置</button>
+                    <button id="resetView" title="重置视图">🔃</button>
                 </div>
             </div>
 

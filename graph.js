@@ -266,24 +266,26 @@ class GraphEditor {
     }
 
     initializeTheme() {
-        document.getElementById('darkMode').addEventListener('change', (e) => {
-            document.body.classList.toggle('dark-mode', e.checked);
-            this.setTheme(e.checked);
+        const themeButton = document.getElementById('darkMode');
+        themeButton.addEventListener('click', () => {
+            const isDarkMode = document.body.classList.toggle('dark-mode');
+            themeButton.textContent = isDarkMode ? '🌙' : '🌞';
+            this.setTheme(isDarkMode);
         });
     }
 
     setTheme(isDark) {
         this.theme = isDark ? {
-            background: '#6B3D2E',
+            background: '#1E1E1E',  // 深灰色背景
             node: {
-                fill: '#593224',
-                stroke: '#FF7F5C',
+                fill: '#2D2D2D',    // 稍浅的深灰色节点
+                stroke: '#4F8BFF',   // 蓝色边框
                 textColor: '#FFFFFF',
                 radius: 20,
                 fontSize: 14
             },
             edge: {
-                color: '#FFFFFF',
+                color: '#CCCCCC',    // 更亮的灰色，提高可读性
                 width: 2,
                 fontSize: 14
             }

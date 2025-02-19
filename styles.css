@@ -148,10 +148,17 @@ button.selected {
 }
 
 .zoom-controls button {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 0;
-    font-size: 18px;
     line-height: 1;
 }
 
@@ -165,7 +172,7 @@ button.selected {
 
 /* 深色模式 */
 body.dark-mode {
-    background: #4A2B20;
+    background: #1E1E1E;
     color: #FFFFFF;
 }
 
@@ -174,27 +181,27 @@ body.dark-mode .input-area,
 body.dark-mode .canvas-container,
 body.dark-mode .stats-panel,
 body.dark-mode .style-panel {
-    background: #6B3D2E;
-    border-color: #593224;
+    background: #2D2D2D;
+    border-color: #3D3D3D;
 }
 
 body.dark-mode button {
-    background: #593224;
-    border-color: #4A2B20;
+    background: #2D2D2D;
+    border-color: #3D3D3D;
     color: #FFFFFF;
 }
 
 body.dark-mode button:hover,
 body.dark-mode button.selected {
-    background: #FF7F5C;
-    border-color: #FF7F5C;
+    background: #4F8BFF;
+    border-color: #4F8BFF;
 }
 
 body.dark-mode select,
 body.dark-mode input,
 body.dark-mode textarea {
-    background: #593224;
-    border-color: #4A2B20;
+    background: #2D2D2D;
+    border-color: #3D3D3D;
     color: #FFFFFF;
 }
 
@@ -209,6 +216,12 @@ select {
     border-radius: 6px;
     background: #FFFFFF;
     color: #333333;
+}
+
+/* 深色模式下拉菜单选项样式 */
+body.dark-mode select option {
+    background: #2D2D2D;
+    color: #FFFFFF;
 }
 
 /* 样式设置面板 */
@@ -579,4 +592,22 @@ body.dark-mode .slider-text {
 
 body.dark-mode .slider-text.off {
     color: #CCCCCC;
+}
+
+.theme-toggle {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    line-height: 1;
+}
+
+body.dark-mode .theme-toggle {
+    background: #2D2D2D;
+    border-color: #3D3D3D;
+    color: #FFFFFF;
 } 
