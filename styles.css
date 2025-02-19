@@ -1,0 +1,332 @@
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #F5F1EA;
+    color: #333333;
+}
+
+.container {
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.main-content {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 180px);
+    position: relative;
+}
+
+.input-area {
+    width: 300px;
+    padding: 20px;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.canvas-container {
+    flex-grow: 1;
+    position: relative;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 100%;
+    min-width: 0;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stats-panel {
+    width: 250px;
+    padding: 15px;
+    background: #FFFFFF;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-shrink: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stats-panel h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+#graphStats {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.toolbar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 15px;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 20px;
+    border-right: 1px solid #E5E5E5;
+}
+
+.toolbar-group:last-child {
+    border-right: none;
+}
+
+button {
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #333333;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: #FF7F5C;
+    color: #FFFFFF;
+    border-color: #FF7F5C;
+}
+
+button.selected {
+    background: #FF7F5C;
+    color: #FFFFFF;
+    border-color: #FF7F5C;
+}
+
+.input-group {
+    margin-bottom: 10px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#nodeCount {
+    width: 100px;
+    padding: 8px;
+}
+
+#graphData {
+    width: 100%;
+    height: 150px;
+    padding: 8px;
+    resize: vertical;
+}
+
+#graphCanvas {
+    display: block;
+    background: white;
+    width: 100%;
+    height: 100%;
+}
+
+.zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 5px;
+}
+
+.zoom-controls button {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.status-bar {
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #666;
+}
+
+/* 深色模式 */
+body.dark-mode {
+    background: #4A2B20;
+    color: #FFFFFF;
+}
+
+body.dark-mode .toolbar,
+body.dark-mode .input-area,
+body.dark-mode .canvas-container,
+body.dark-mode .stats-panel,
+body.dark-mode .style-panel {
+    background: #6B3D2E;
+    border-color: #593224;
+}
+
+body.dark-mode button {
+    background: #593224;
+    border-color: #4A2B20;
+    color: #FFFFFF;
+}
+
+body.dark-mode button:hover,
+body.dark-mode button.selected {
+    background: #FF7F5C;
+    border-color: #FF7F5C;
+}
+
+body.dark-mode select,
+body.dark-mode input,
+body.dark-mode textarea {
+    background: #593224;
+    border-color: #4A2B20;
+    color: #FFFFFF;
+}
+
+body.dark-mode #graphCanvas {
+    background: #1e1e1e;
+}
+
+/* 下拉菜单样式 */
+select {
+    padding: 8px;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #333333;
+}
+
+/* 样式设置面板 */
+.style-panel {
+    position: fixed;
+    width: 250px;
+    right: 20px;
+    top: 200px;
+    background: #FFFFFF;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: none;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.style-panel h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.style-group {
+    margin-bottom: 10px;
+}
+
+.style-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #666;
+}
+
+.style-group input[type="range"] {
+    width: 100%;
+}
+
+.style-group input[type="color"] {
+    width: 100%;
+    height: 30px;
+    padding: 2px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 深色模式适配 */
+body.dark-mode .style-panel {
+    background: #2d2d2d;
+    border-color: #444;
+}
+
+body.dark-mode .style-panel h3,
+body.dark-mode .style-group label {
+    color: #fff;
+}
+
+.style-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    cursor: move;
+    user-select: none;
+    padding: 5px;
+}
+
+.style-panel-header:hover {
+    background: #f5f5f5;
+}
+
+.style-panel-header h3 {
+    margin: 0;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.close-button:hover {
+    color: #ff4444;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+    padding: 8px;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    background: #FFFFFF;
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px;
+    color: #333333;
+    border-radius: 6px;
+    transition: all 0.2s;
+    margin-left: 10px;
+}
+
+.github-link:hover {
+    background: #FF7F5C;
+    color: #FFFFFF;
+}
+
+body.dark-mode .github-link {
+    color: #FFFFFF;
+}
+
+body.dark-mode .github-link:hover {
+    background: #FF7F5C;
+} 
