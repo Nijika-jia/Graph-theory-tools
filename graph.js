@@ -139,10 +139,49 @@ class GraphEditor {
             this.initializeTheme();
             this.initializeZoomControls();
             this.initializeLayouts();
-            this.initializeStyles();
             this.initializeExport();
         } catch (error) {
             console.error('初始化组件时出错:', error);
+        }
+    }
+
+    initializeExport() {
+        const exportButton = document.getElementById('export');
+        if (exportButton) {
+            exportButton.addEventListener('click', () => {
+                const format = document.getElementById('exportFormat').value;
+                if (!format) return;
+
+                switch(format) {
+                    case 'PNG':
+                        const dataURL = this.canvas.toDataURL('image/png');
+                        const link = document.createElement('a');
+                        link.download = 'graph.png';
+                        link.href = dataURL;
+                        link.click();
+                        break;
+                    case 'JSON':
+                        const data = {
+                            nodes: this.nodes,
+                            edges: this.edges,
+                            isDirected: this.isDirected
+                        };
+                        this.downloadFile('graph.json', JSON.stringify(data, null, 2));
+                        break;
+                    case 'DOT':
+                        this.exportDOT();
+                        break;
+                    case 'Matrix':
+                        this.exportMatrix();
+                        break;
+                    case 'List':
+                        this.exportAdjacencyList();
+                        break;
+                    case 'SVG':
+                        this.exportSVG();
+                        break;
+                }
+            });
         }
     }
 
@@ -158,8 +197,11 @@ class GraphEditor {
     }
 
     setDefaultData() {
-        // 设置默认的图数据，部分边有权重，部分边没有
-        const defaultData = 
+        const inputFormat = document.getElementById('inputFormat');
+        const graphDataInput = document.getElementById('graphData');
+        
+        // 默认的边列表数据
+        const defaultEdgeList = 
 `0 2
 0 4 2
 0 5
@@ -169,13 +211,22 @@ class GraphEditor {
 2 4 3
 4 5 1`;
 
-        // 设置输入框的值并触发图的创建
-        const graphDataInput = document.getElementById('graphData');
+        // 对应的邻接矩阵数据
+        const defaultMatrix = 
+`0 0 1 0 2 1
+0 0 0 0 1 5
+1 0 0 1 3 0
+0 0 1 0 0 0
+2 1 3 0 0 1
+1 5 0 0 1 0`;
+
         if (graphDataInput) {
-            graphDataInput.value = defaultData;
+            // 根据当前选择的格式设置默认数据
+            graphDataInput.value = inputFormat.value === 'edgeList' ? 
+                defaultEdgeList : defaultMatrix;
             
             // 手动触发数据解析
-            this.autoDetectNodeCount(defaultData);
+            this.autoDetectNodeCount(graphDataInput.value);
             this.parseAndCreateGraph();
 
             // 确保画布大小正确并重绘
@@ -187,6 +238,16 @@ class GraphEditor {
                 this.startPhysicsSimulation();
             }
         }
+
+        // 添加输入格式切换时的数据更新
+        inputFormat.addEventListener('change', () => {
+            if (graphDataInput.value === defaultEdgeList || 
+                graphDataInput.value === defaultMatrix) {
+                graphDataInput.value = inputFormat.value === 'edgeList' ? 
+                    defaultEdgeList : defaultMatrix;
+                this.parseAndCreateGraph();
+            }
+        });
     }
 
     resizeCanvas() {
@@ -499,40 +560,6 @@ class GraphEditor {
                 });
                 this.draw();
                 this.updateGraphStats(); // 重新计算统计信息
-            },
-            'export': () => {
-                const format = document.getElementById('exportFormat').value;
-                if (!format) return;
-
-                switch(format) {
-                    case 'PNG':
-                        const dataURL = this.canvas.toDataURL('image/png');
-                        const link = document.createElement('a');
-                        link.download = 'graph.png';
-                        link.href = dataURL;
-                        link.click();
-                        break;
-                    case 'JSON':
-                        const data = {
-                            nodes: this.nodes,
-                            edges: this.edges,
-                            isDirected: this.isDirected
-                        };
-                        this.downloadFile('graph.json', JSON.stringify(data, null, 2));
-                        break;
-                    case 'DOT':
-                        this.exportDOT();
-                        break;
-                    case 'Matrix':
-                        this.exportMatrix();
-                        break;
-                    case 'List':
-                        this.exportAdjacencyList();
-                        break;
-                    case 'SVG':
-                        this.exportSVG();
-                        break;
-                }
             }
         };
 
@@ -550,9 +577,38 @@ class GraphEditor {
     }
 
     initializeInputParser() {
-        // 监听图数据输入变化
-        document.getElementById('graphData').addEventListener('input', (e) => {
-            this.autoDetectNodeCount(e.target.value);
+        const graphData = document.getElementById('graphData');
+        const inputFormat = document.getElementById('inputFormat');
+        
+        // 更新placeholder提示和转换数据格式
+        inputFormat.addEventListener('change', () => {
+            // 更新placeholder
+            if (inputFormat.value === 'edgeList') {
+                graphData.placeholder = 
+                    "每行输入两个或三个数字表示边的连接关系\n" +
+                    "格式：起点 终点 [权重]\n" +
+                    "例如:\n" +
+                    "1 0\n" +
+                    "2 1 5\n" +
+                    "3 2";
+            } else {
+                graphData.placeholder = 
+                    "输入N×N的邻接矩阵\n" +
+                    "0表示无边，非0表示边权重\n" +
+                    "例如:\n" +
+                    "0 1 0\n" +
+                    "1 0 1\n" +
+                    "0 1 0";
+            }
+
+            // 转换当前数据到新格式
+            if (this.nodes.length > 0) {
+                this.updateInputText();
+            }
+        });
+
+        graphData.addEventListener('input', () => {
+            this.autoDetectNodeCount(graphData.value);
             this.parseAndCreateGraph();
         });
     }
@@ -800,8 +856,8 @@ class GraphEditor {
                 break;
         }
         
+        this.updateInputText();
         this.draw();
-        this.updateInputFields();
     }
 
     handleMouseDown(e) {
@@ -813,7 +869,6 @@ class GraphEditor {
                 if (this.isPhysicsEnabled) {
                     this.draggedNode.vx = 0;
                     this.draggedNode.vy = 0;
-                    this.fixedNodes.add(this.draggedNode); // 添加到固定节点集合
                 }
             }
         }
@@ -821,10 +876,18 @@ class GraphEditor {
 
     handleMouseUp() {
         if (this.draggedNode) {
-            this.fixedNodes.delete(this.draggedNode); // 释放固定节点
+            if (this.isPhysicsEnabled) {
+                this.draggedNode.vx = 0;
+                this.draggedNode.vy = 0;
+            }
+            this.draggedNode = null;
+            this.isDragging = false;
+            this.updateInputText();
         }
-        this.isDragging = false;
-        this.draggedNode = null;
+        if (this.tempEdge) {
+            this.tempEdge = null;
+            this.draw();
+        }
     }
 
     handleMouseMove(e) {
@@ -1050,85 +1113,100 @@ class GraphEditor {
     }
 
     parseAndCreateGraph() {
-        try {
-            // 暂停物理模拟，避免创建节点时的抖动
-            const wasPhysicsEnabled = this.isPhysicsEnabled;
-            this.stopPhysicsSimulation();
+        const data = document.getElementById('graphData').value.trim();
+        const format = document.getElementById('inputFormat').value;
+        
+        if (!data) return;
 
-            this.nodes = [];
-            this.edges = [];
-            
-            const edgeData = document.getElementById('graphData').value.trim();
-            if (!edgeData) return;
+        // 清除现有的图
+        this.nodes = [];
+        this.edges = [];
 
-            // 从边数据中提取所有节点
-            const nodes = new Set();
-            const edgeList = edgeData.split('\n')
-                .map(line => line.trim())
-                .filter(line => line.length > 0)
-                .map(line => {
-                    const parts = line.split(' ').map(n => parseInt(n));
-                    const [from, to, weight] = parts;
-                    
-                    // 添加节点到集合
-                    if (!isNaN(from)) nodes.add(from);
-                    if (!isNaN(to)) nodes.add(to);
-                    
-                    if (isNaN(from) || isNaN(to)) {
-                        return null;
-                    }
-                    
-                    return { 
-                        from, 
-                        to, 
-                        weight: isNaN(weight) ? 0 : weight // 如果有第三个数，作为权重
-                    };
-                })
-                .filter(edge => edge !== null);
+        if (format === 'edgeList') {
+            this.parseEdgeList(data);
+        } else {
+            this.parseAdjacencyMatrix(data);
+        }
 
-            if (nodes.size === 0) return;
+        this.draw();
+        this.updateGraphStats();
+    }
 
-            // 创建节点
-            const nodeArray = Array.from(nodes).sort((a, b) => a - b);
-            const centerX = this.canvas.width / 2;
-            const centerY = this.canvas.height / 2;
-            const radius = Math.min(this.canvas.width, this.canvas.height) / 4;
+    parseEdgeList(data) {
+        const lines = data.split('\n');
+        const nodeSet = new Set();
 
-            nodeArray.forEach((id, index) => {
-                const angle = (2 * Math.PI * index) / nodeArray.length;
-                this.nodes.push({
-                    id: id,
-                    x: centerX + radius * Math.cos(angle),
-                    y: centerY + radius * Math.sin(angle),
-                    vx: (Math.random() - 0.5)
-                });
+        // 第一遍：收集所有节点
+        lines.forEach(line => {
+            const [from, to] = line.trim().split(/\s+/).map(Number);
+            if (!isNaN(from) && !isNaN(to)) {
+                nodeSet.add(from);
+                nodeSet.add(to);
+            }
+        });
+
+        // 创建节点
+        Array.from(nodeSet).sort((a, b) => a - b).forEach(id => {
+            this.nodes.push({
+                id,
+                x: Math.random() * this.canvas.width * 0.8 + this.canvas.width * 0.1,
+                y: Math.random() * this.canvas.height * 0.8 + this.canvas.height * 0.1
             });
+        });
 
-            // 创建边
-            edgeList.forEach(edge => {
-                const fromNode = this.nodes.find(n => n.id === edge.from);
-                const toNode = this.nodes.find(n => n.id === edge.to);
+        // 创建边
+        lines.forEach(line => {
+            const parts = line.trim().split(/\s+/).map(Number);
+            if (parts.length >= 2) {
+                const [from, to, weight] = parts;
+                const fromNode = this.nodes.find(n => n.id === from);
+                const toNode = this.nodes.find(n => n.id === to);
                 if (fromNode && toNode) {
                     this.edges.push({
                         from: fromNode,
                         to: toNode,
-                        directed: document.getElementById('directedEdge').checked,
-                        weight: edge.weight
+                        weight: weight || undefined,
+                        directed: this.isDirected
                     });
                 }
-            });
-
-            this.draw();
-
-            // 如果之前开启了物理模拟，重新启动
-            if (wasPhysicsEnabled || this.isPhysicsEnabled) {
-                this.isPhysicsEnabled = true;
-                document.getElementById('force').classList.add('selected');
-                this.startPhysicsSimulation();
             }
+        });
+    }
 
-        } catch (error) {
-            console.log('解析输入时出错:', error);
+    parseAdjacencyMatrix(data) {
+        const lines = data.trim().split('\n');
+        const matrix = lines.map(line => 
+            line.trim().split(/\s+/).map(val => val === '+' ? 1 : Number(val))
+        );
+
+        // 验证矩阵是否合法
+        const n = matrix.length;
+        if (!matrix.every(row => row.length === n)) {
+            console.error('邻接矩阵格式不正确');
+            return;
+        }
+
+        // 创建节点
+        for (let i = 0; i < n; i++) {
+            this.nodes.push({
+                id: i,
+                x: Math.random() * this.canvas.width * 0.8 + this.canvas.width * 0.1,
+                y: Math.random() * this.canvas.height * 0.8 + this.canvas.height * 0.1
+            });
+        }
+
+        // 创建边
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                if (matrix[i][j] !== 0) {
+                    this.edges.push({
+                        from: this.nodes[i],
+                        to: this.nodes[j],
+                        weight: matrix[i][j] === 1 ? undefined : matrix[i][j],
+                        directed: this.isDirected
+                    });
+                }
+            }
         }
     }
 
@@ -1320,23 +1398,26 @@ class GraphEditor {
         const stats = {
             nodes: this.nodes.length,
             edges: this.edges.length,
-            density: this.calculateDensity(),
-            avgDegree: this.calculateAverageDegree(),
-            maxDegree: this.calculateMaxDegree(),
             components: this.countComponents(),
             isConnected: this.isConnected(),
-            hasCycle: this.hasCycle()
+            hasCycle: this.hasCycle(),
+            isTree: this.isTree(),
+            isBipartite: this.isBipartite(),
+            diameter: this.calculateDiameter(),
         };
 
         const statsHtml = `
-            <div>节点数：${stats.nodes}</div>
-            <div>边数：${stats.edges}</div>
-            <div>图密度：${stats.density.toFixed(3)}</div>
-            <div>平均度：${stats.avgDegree.toFixed(2)}</div>
-            <div>最大度：${stats.maxDegree}</div>
-            <div>连通分量：${stats.components}</div>
-            <div>是否连通：${stats.isConnected ? '是' : '否'}</div>
-            <div>是否有环：${stats.hasCycle ? '是' : '否'}</div>
+            <div>基本信息：</div>
+            <div>・节点数：${stats.nodes}</div>
+            <div>・边数：${stats.edges}</div>
+            
+            <div style="margin-top: 10px">图的性质：</div>
+            <div>・连通分量数：${stats.components}</div>
+            <div>・是否连通：${stats.isConnected ? '是' : '否'}</div>
+            <div>・是否有环：${stats.hasCycle ? '是' : '否'}</div>
+            <div>・是否为树：${stats.isTree ? '是' : '否'}</div>
+            <div>・是否为二分图：${stats.isBipartite ? '是' : '否'}</div>
+            <div>・最长最短路径长度：${stats.isConnected ? stats.diameter : '∞'}</div>
         `;
 
         document.getElementById('graphStats').innerHTML = statsHtml;
@@ -1362,6 +1443,19 @@ class GraphEditor {
         return Math.max(...this.nodes.map(node => 
             this.edges.filter(e => e.from === node || e.to === node).length
         ));
+    }
+
+    calculateMinDegree() {
+        if (this.nodes.length === 0) return 0;
+        return Math.min(...this.nodes.map(node => 
+            this.edges.filter(e => e.from === node || e.to === node).length
+        ));
+    }
+
+    getIsolatedNodes() {
+        return this.nodes.filter(node => 
+            !this.edges.some(e => e.from === node || e.to === node)
+        ).length;
     }
 
     countComponents() {
@@ -1479,140 +1573,255 @@ class GraphEditor {
         return false;
     }
 
-    initializeStyles() {
-        const stylePanel = document.querySelector('.style-panel');
-        const toggleButton = document.getElementById('toggleStyle');
+    calculateDiameter() {
+        if (!this.isConnected() || this.nodes.length === 0) return Infinity;
         
-        if (!stylePanel || !toggleButton) {
-            console.error('找不到样式面板或切换按钮');
-            return;
-        }
-
-        // 初始化拖动功能
-        let isDragging = false;
-        let startX, startY;
-        let panelX, panelY;
-
-        // 只允许通过标题栏拖动
-        const header = stylePanel.querySelector('.style-panel-header');
-        if (header) {
-            header.addEventListener('mousedown', (e) => {
-                if (e.target.classList.contains('close-button')) return;
-                isDragging = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                const rect = stylePanel.getBoundingClientRect();
-                panelX = rect.left;
-                panelY = rect.top;
-            });
-        }
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
-            stylePanel.style.left = `${panelX + dx}px`;
-            stylePanel.style.top = `${panelY + dy}px`;
+        // Floyd-Warshall算法
+        const n = this.nodes.length;
+        const dist = Array(n).fill().map(() => Array(n).fill(Infinity));
+        
+        // 初始化距离矩阵
+        for (let i = 0; i < n; i++) dist[i][i] = 0;
+        this.edges.forEach(edge => {
+            const u = this.nodes.indexOf(edge.from);
+            const v = this.nodes.indexOf(edge.to);
+            dist[u][v] = 1;
+            if (!this.isDirected) dist[v][u] = 1;
         });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-
-        // 显示/隐藏功能
-        toggleButton.addEventListener('click', () => {
-            console.log('Toggle button clicked');
-            if (stylePanel.style.display === 'none' || !stylePanel.style.display) {
-                stylePanel.style.display = 'block';
-                // 设置初始位置在右侧中间位置
-                const right = 20;  // 距离右边界20px
-                const top = 200;   // 距离顶部200px，避免遮挡按钮和其他内容
-                stylePanel.style.right = `${right}px`;
-                stylePanel.style.left = 'auto';  // 清除left属性
-                stylePanel.style.top = `${top}px`;
-            } else {
-                stylePanel.style.display = 'none';
+        
+        // Floyd-Warshall
+        for (let k = 0; k < n; k++) {
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    if (dist[i][k] !== Infinity && dist[k][j] !== Infinity) {
+                        dist[i][j] = Math.min(dist[i][j], dist[i][k] + dist[k][j]);
+                    }
+                }
             }
-        });
-
-        // 关闭按钮
-        const closeButton = stylePanel.querySelector('.close-button');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
-                stylePanel.style.display = 'none';
-            });
         }
-
-        // 样式控制
-        const styleInputs = {
-            nodeSize: document.getElementById('nodeSize'),
-            nodeColor: document.getElementById('nodeColor'),
-            edgeWidth: document.getElementById('edgeWidth'),
-            edgeColor: document.getElementById('edgeColor'),
-            fontSize: document.getElementById('fontSize'),
-            edgeFontSize: document.getElementById('edgeFontSize')
-        };
-
-        // 设置初始值
-        if (styleInputs.nodeSize) styleInputs.nodeSize.value = this.theme.node.radius;
-        if (styleInputs.nodeColor) styleInputs.nodeColor.value = this.theme.node.fill;
-        if (styleInputs.edgeWidth) styleInputs.edgeWidth.value = this.theme.edge.width;
-        if (styleInputs.edgeColor) styleInputs.edgeColor.value = this.theme.edge.color;
-        if (styleInputs.fontSize) styleInputs.fontSize.value = this.theme.node.fontSize;
-        if (styleInputs.edgeFontSize) styleInputs.edgeFontSize.value = this.theme.edge.fontSize;
-
-        Object.entries(styleInputs).forEach(([key, input]) => {
-            if (input) {
-                input.addEventListener('input', () => {
-                    this.updateStyle(key, input.value);
-                });
+        
+        // 计算直径
+        let diameter = 0;
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                if (dist[i][j] !== Infinity) {
+                    diameter = Math.max(diameter, dist[i][j]);
+                }
             }
-        });
+        }
+        return diameter;
     }
 
-    updateStyle(property, value) {
-        switch(property) {
-            case 'nodeSize':
-                this.theme.node.radius = parseInt(value);
-                break;
-            case 'nodeColor':
-                this.theme.node.fill = value;
-                break;
-            case 'edgeWidth':
-                this.theme.edge.width = parseInt(value);
-                break;
-            case 'edgeColor':
-                this.theme.edge.color = value;
-                break;
-            case 'fontSize':
-                this.theme.node.fontSize = parseInt(value);
-                break;
-            case 'edgeFontSize':
-                this.theme.edge.fontSize = parseInt(value);
-                break;
+    isTree() {
+        return this.isConnected() && !this.hasCycle() && 
+               this.edges.length === this.nodes.length - 1;
+    }
+
+    isBipartite() {
+        if (this.nodes.length === 0) return true;
+        
+        const colors = new Map();
+        
+        const dfs = (node, color) => {
+            colors.set(node, color);
+            
+            const neighbors = this.edges
+                .filter(e => e.from === node || e.to === node)
+                .map(e => e.from === node ? e.to : e.from);
+                
+            for (const neighbor of neighbors) {
+                if (!colors.has(neighbor)) {
+                    if (!dfs(neighbor, 1 - color)) return false;
+                } else if (colors.get(neighbor) === color) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        
+        for (const node of this.nodes) {
+            if (!colors.has(node)) {
+                if (!dfs(node, 0)) return false;
+            }
         }
-        this.draw();
+        return true;
+    }
+
+    findMaxClique() {
+        // Implementation of findMaxClique method
+        // This is a placeholder and should be implemented based on your specific requirements
+        return new Set();
+    }
+
+    calculateChromaticNumber() {
+        // Implementation of calculateChromaticNumber method
+        // This is a placeholder and should be implemented based on your specific requirements
+        return 0;
+    }
+
+    calculateRadius() {
+        if (!this.isConnected() || this.nodes.length === 0) return Infinity;
+        
+        const eccentricities = this.calculateEccentricities();
+        return Math.min(...eccentricities.values());
+    }
+
+    findCenter() {
+        if (!this.isConnected() || this.nodes.length === 0) return [];
+        
+        const eccentricities = this.calculateEccentricities();
+        const radius = Math.min(...eccentricities.values());
+        
+        return this.nodes
+            .filter(node => eccentricities.get(node) === radius)
+            .map(node => node.id);
+    }
+
+    calculateEccentricities() {
+        const eccentricities = new Map();
+        const n = this.nodes.length;
+        const dist = this.floydWarshall();
+        
+        for (let i = 0; i < n; i++) {
+            let maxDist = 0;
+            for (let j = 0; j < n; j++) {
+                if (dist[i][j] !== Infinity) {
+                    maxDist = Math.max(maxDist, dist[i][j]);
+                }
+            }
+            eccentricities.set(this.nodes[i], maxDist);
+        }
+        
+        return eccentricities;
+    }
+
+    calculateGirth() {
+        if (!this.hasCycle()) return Infinity;
+        
+        let minCycle = Infinity;
+        const n = this.nodes.length;
+        const dist = this.floydWarshall();
+        
+        for (const edge of this.edges) {
+            const u = this.nodes.indexOf(edge.from);
+            const v = this.nodes.indexOf(edge.to);
+            
+            // 不考虑这条边的最短路径长度
+            const pathLength = dist[u][v];
+            if (pathLength !== Infinity) {
+                minCycle = Math.min(minCycle, pathLength + 1);
+            }
+        }
+        
+        return minCycle;
+    }
+
+    isEulerian() {
+        if (!this.isConnected()) return false;
+        
+        // 检查所有顶点的度数是否为偶数
+        return this.nodes.every(node => 
+            this.edges.filter(e => e.from === node || e.to === node).length % 2 === 0
+        );
+    }
+
+    isHamiltonian() {
+        const n = this.nodes.length;
+        if (n < 3) return false;
+        
+        // Dirac定理：如果图G是n(n≥3)个顶点的简单图，
+        // 且每个顶点的度数不小于n/2，则G是哈密顿图
+        return this.nodes.every(node => 
+            this.edges.filter(e => e.from === node || e.to === node).length >= n/2
+        );
+    }
+
+    floydWarshall() {
+        const n = this.nodes.length;
+        const dist = Array(n).fill().map(() => Array(n).fill(Infinity));
+        
+        // 初始化
+        for (let i = 0; i < n; i++) dist[i][i] = 0;
+        this.edges.forEach(edge => {
+            const u = this.nodes.indexOf(edge.from);
+            const v = this.nodes.indexOf(edge.to);
+            dist[u][v] = 1;
+            if (!this.isDirected) dist[v][u] = 1;
+        });
+        
+        // Floyd-Warshall
+        for (let k = 0; k < n; k++) {
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    if (dist[i][k] !== Infinity && dist[k][j] !== Infinity) {
+                        dist[i][j] = Math.min(dist[i][j], dist[i][k] + dist[k][j]);
+                    }
+                }
+            }
+        }
+        
+        return dist;
+    }
+
+    // 添加新方法
+    updateInputText() {
+        const format = document.getElementById('inputFormat').value;
+        const graphData = document.getElementById('graphData');
+        
+        if (format === 'edgeList') {
+            // 边列表格式保持不变
+            const nodesInEdges = new Set();
+            const edgeLines = [];
+            
+            this.edges.forEach(edge => {
+                nodesInEdges.add(edge.from.id);
+                nodesInEdges.add(edge.to.id);
+                const weight = edge.weight !== undefined ? ` ${edge.weight}` : '';
+                edgeLines.push(`${edge.from.id} ${edge.to.id}${weight}`);
+            });
+            
+            const isolatedNodes = this.nodes
+                .filter(node => !nodesInEdges.has(node.id))
+                .map(node => `${node.id}`);
+            
+            graphData.value = [...edgeLines, ...isolatedNodes].join('\n');
+        } else {
+            // 邻接矩阵格式使用 "+" 表示无权边
+            const n = this.nodes.length;
+            const matrix = Array(n).fill().map(() => Array(n).fill(0));
+            
+            this.edges.forEach(edge => {
+                const i = this.nodes.findIndex(n => n.id === edge.from.id);
+                const j = this.nodes.findIndex(n => n.id === edge.to.id);
+                // 使用 "+" 表示无权边，数字表示有权边
+                matrix[i][j] = edge.weight !== undefined ? edge.weight : '+';
+                if (!this.isDirected) {
+                    matrix[j][i] = edge.weight !== undefined ? edge.weight : '+';
+                }
+            });
+            
+            graphData.value = matrix.map(row => row.join(' ')).join('\n');
+        }
     }
 
     exportDOT() {
-        let dot = this.isDirected ? 'digraph G {\n' : 'graph G {\n';
+        let dot = 'digraph G {\n';
         
-        // 节点定义
+        // 添加节点
         this.nodes.forEach(node => {
-            dot += `    ${node.id} [pos="${node.x},${node.y}!"];\n`;
+            dot += `    ${node.id};\n`;
         });
-
-        // 边定义
+        
+        // 添加边
         this.edges.forEach(edge => {
-            const connector = this.isDirected ? '->' : '--';
-            dot += `    ${edge.from.id} ${connector} ${edge.to.id}`;
-            if (edge.weight) {
-                dot += ` [label="${edge.weight}"]`;
+            const weight = edge.weight !== undefined ? ` [label="${edge.weight}"]` : '';
+            if (this.isDirected) {
+                dot += `    ${edge.from.id} -> ${edge.to.id}${weight};\n`;
+            } else {
+                dot += `    ${edge.from.id} -- ${edge.to.id}${weight};\n`;
             }
-            dot += ';\n';
         });
-
+        
         dot += '}';
         this.downloadFile('graph.dot', dot);
     }
@@ -1622,34 +1831,39 @@ class GraphEditor {
         const matrix = Array(n).fill().map(() => Array(n).fill(0));
         
         this.edges.forEach(edge => {
-            const i = this.nodes.indexOf(edge.from);
-            const j = this.nodes.indexOf(edge.to);
-            matrix[i][j] = edge.weight || 1;
+            const i = this.nodes.findIndex(n => n.id === edge.from.id);
+            const j = this.nodes.findIndex(n => n.id === edge.to.id);
+            matrix[i][j] = edge.weight || '+';
             if (!this.isDirected) {
-                matrix[j][i] = edge.weight || 1;
+                matrix[j][i] = edge.weight || '+';
             }
         });
-
-        const text = matrix.map(row => row.join(' ')).join('\n');
-        this.downloadFile('adjacency_matrix.txt', text);
+        
+        const matrixStr = matrix.map(row => row.join(' ')).join('\n');
+        this.downloadFile('matrix.txt', matrixStr);
     }
 
     exportAdjacencyList() {
-        let text = '';
+        let list = '';
+        
+        // 对于每个节点，找出它的邻接点
         this.nodes.forEach(node => {
             const neighbors = this.edges
-                .filter(e => e.from === node || (!this.isDirected && e.to === node))
+                .filter(e => e.from.id === node.id || (!this.isDirected && e.to.id === node.id))
                 .map(e => {
-                    const neighbor = e.from === node ? e.to : e.from;
-                    return e.weight ? `${neighbor.id}(${e.weight})` : neighbor.id;
-                });
-            text += `${node.id}: ${neighbors.join(', ')}\n`;
+                    const neighborId = e.from.id === node.id ? e.to.id : e.from.id;
+                    const weight = e.weight !== undefined ? ` (${e.weight})` : '';
+                    return `${neighborId}${weight}`;
+                })
+                .join(' ');
+            
+            list += `${node.id}: ${neighbors}\n`;
         });
-        this.downloadFile('adjacency_list.txt', text);
+        
+        this.downloadFile('adjacency_list.txt', list);
     }
 
     exportSVG() {
-        // 创建SVG元素和命名空间
         const svgNS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(svgNS, 'svg');
         
@@ -1667,6 +1881,7 @@ class GraphEditor {
         
         // 添加边
         this.edges.forEach(edge => {
+            // 创建边的线条
             const line = document.createElementNS(svgNS, 'line');
             line.setAttributeNS(null, 'x1', edge.from.x);
             line.setAttributeNS(null, 'y1', edge.from.y);
@@ -1676,8 +1891,27 @@ class GraphEditor {
             line.setAttributeNS(null, 'stroke-width', this.theme.edge.width);
             g.appendChild(line);
 
+            // 如果是有向边，添加箭头
+            if (edge.directed) {
+                const dx = edge.to.x - edge.from.x;
+                const dy = edge.to.y - edge.from.y;
+                const angle = Math.atan2(dy, dx);
+                const length = 15;
+
+                const arrowX1 = edge.to.x - length * Math.cos(angle - Math.PI/6);
+                const arrowY1 = edge.to.y - length * Math.sin(angle - Math.PI/6);
+                const arrowX2 = edge.to.x - length * Math.cos(angle + Math.PI/6);
+                const arrowY2 = edge.to.y - length * Math.sin(angle + Math.PI/6);
+
+                const arrow = document.createElementNS(svgNS, 'path');
+                arrow.setAttributeNS(null, 'd', 
+                    `M ${edge.to.x} ${edge.to.y} L ${arrowX1} ${arrowY1} L ${arrowX2} ${arrowY2} Z`);
+                arrow.setAttributeNS(null, 'fill', this.theme.edge.color);
+                g.appendChild(arrow);
+            }
+
             // 如果有权重，添加权重文本
-            if (edge.weight !== undefined && edge.weight !== 0) {
+            if (edge.weight !== undefined) {
                 const text = document.createElementNS(svgNS, 'text');
                 const midX = (edge.from.x + edge.to.x) / 2;
                 const midY = (edge.from.y + edge.to.y) / 2;
@@ -1689,26 +1923,6 @@ class GraphEditor {
                 text.setAttributeNS(null, 'font-size', this.theme.edge.fontSize);
                 text.textContent = edge.weight;
                 g.appendChild(text);
-            }
-
-            // 如果是有向边，添加箭头
-            if (edge.directed) {
-                const dx = edge.to.x - edge.from.x;
-                const dy = edge.to.y - edge.from.y;
-                const angle = Math.atan2(dy, dx);
-                const length = 15;
-
-                const endX = edge.to.x;
-                const endY = edge.to.y;
-                const arrowX1 = endX - length * Math.cos(angle - Math.PI/6);
-                const arrowY1 = endY - length * Math.sin(angle - Math.PI/6);
-                const arrowX2 = endX - length * Math.cos(angle + Math.PI/6);
-                const arrowY2 = endY - length * Math.sin(angle + Math.PI/6);
-
-                const arrow = document.createElementNS(svgNS, 'path');
-                arrow.setAttributeNS(null, 'd', `M ${endX} ${endY} L ${arrowX1} ${arrowY1} L ${arrowX2} ${arrowY2} Z`);
-                arrow.setAttributeNS(null, 'fill', this.theme.edge.color);
-                g.appendChild(arrow);
             }
         });
         
@@ -1754,46 +1968,6 @@ class GraphEditor {
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
-    }
-
-    initializeExport() {
-        const exportButton = document.getElementById('export');
-        if (exportButton) {
-            exportButton.addEventListener('click', () => {
-                const format = document.getElementById('exportFormat').value;
-                if (!format) return;
-
-                switch(format) {
-                    case 'PNG':
-                        const dataURL = this.canvas.toDataURL('image/png');
-                        const link = document.createElement('a');
-                        link.download = 'graph.png';
-                        link.href = dataURL;
-                        link.click();
-                        break;
-                    case 'JSON':
-                        const data = {
-                            nodes: this.nodes,
-                            edges: this.edges,
-                            isDirected: this.isDirected
-                        };
-                        this.downloadFile('graph.json', JSON.stringify(data, null, 2));
-                        break;
-                    case 'DOT':
-                        this.exportDOT();
-                        break;
-                    case 'Matrix':
-                        this.exportMatrix();
-                        break;
-                    case 'List':
-                        this.exportAdjacencyList();
-                        break;
-                    case 'SVG':
-                        this.exportSVG();
-                        break;
-                }
-            });
-        }
     }
 }
 
