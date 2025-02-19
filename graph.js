@@ -245,6 +245,93 @@ class GraphEditor {
     }
 
     initializeEvents() {
+        // 检测是否支持触摸事件
+        const isTouchDevice = 'ontouchstart' in window;
+
+        if (isTouchDevice) {
+            let lastTapTime = 0;
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            this.canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = this.canvas.getBoundingClientRect();
+                touchStartX = touch.clientX - rect.left;
+                touchStartY = touch.clientY - rect.top;
+
+                // 检测双击/双触
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTapTime;
+                if (tapLength < 300 && tapLength > 0) {
+                    // 双击操作 - 添加节点
+                    if (this.mode === 'node') {
+                        this.handleCanvasClick({
+                            clientX: touchStartX + rect.left,
+                            clientY: touchStartY + rect.top
+                        });
+                    }
+                }
+                lastTapTime = currentTime;
+
+                // 处理拖拽开始
+                this.handleMouseDown({
+                    clientX: touchStartX + rect.left,
+                    clientY: touchStartY + rect.top
+                });
+            });
+
+            this.canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = this.canvas.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+
+                // 处理拖拽移动
+                this.handleMouseMove({
+                    clientX: x + rect.left,
+                    clientY: y + rect.top
+                });
+
+                // 如果是两指触摸，处理缩放
+                if (e.touches.length === 2) {
+                    const touch2 = e.touches[1];
+                    const dist = Math.hypot(
+                        touch2.clientX - touch.clientX,
+                        touch2.clientY - touch.clientY
+                    );
+                    
+                    if (this.lastPinchDistance) {
+                        const scale = dist / this.lastPinchDistance;
+                        const centerX = (touch.clientX + touch2.clientX) / 2 - rect.left;
+                        const centerY = (touch.clientY + touch2.clientY) / 2 - rect.top;
+                        this.zoom(scale, centerX, centerY);
+                    }
+                    this.lastPinchDistance = dist;
+                }
+            });
+
+            this.canvas.addEventListener('touchend', (e) => {
+                // 处理点击事件
+                if (!this.isDragging) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.handleCanvasClick({
+                        clientX: touchStartX + rect.left,
+                        clientY: touchStartY + rect.top
+                    });
+                }
+
+                this.handleMouseUp();
+                this.lastPinchDistance = null;
+
+                // 如果是最后一个手指离开，重置所有状态
+                if (e.touches.length === 0) {
+                    this.isPanning = false;
+                }
+            });
+        }
+
         this.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
         this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
@@ -1621,6 +1708,46 @@ class GraphEditor {
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
+    }
+
+    initializeExport() {
+        const exportButton = document.getElementById('export');
+        if (exportButton) {
+            exportButton.addEventListener('click', () => {
+                const format = document.getElementById('exportFormat').value;
+                if (!format) return;
+
+                switch(format) {
+                    case 'PNG':
+                        const dataURL = this.canvas.toDataURL('image/png');
+                        const link = document.createElement('a');
+                        link.download = 'graph.png';
+                        link.href = dataURL;
+                        link.click();
+                        break;
+                    case 'JSON':
+                        const data = {
+                            nodes: this.nodes,
+                            edges: this.edges,
+                            isDirected: this.isDirected
+                        };
+                        this.downloadFile('graph.json', JSON.stringify(data, null, 2));
+                        break;
+                    case 'DOT':
+                        this.exportDOT();
+                        break;
+                    case 'Matrix':
+                        this.exportMatrix();
+                        break;
+                    case 'List':
+                        this.exportAdjacencyList();
+                        break;
+                    case 'SVG':
+                        this.exportSVG();
+                        break;
+                }
+            });
+        }
     }
 }
 
