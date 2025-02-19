@@ -454,4 +454,129 @@ body.dark-mode .github-link:hover {
     width: device-width;
     zoom: 1.0;
     user-zoom: fixed;
+}
+
+/* 复选框和标签样式 */
+input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+input[type="checkbox"] + label {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* 深色模式适配 */
+body.dark-mode input[type="checkbox"] + label {
+    color: #FFFFFF;
+}
+
+/* 开关标签样式 */
+.switch-label {
+    font-size: 14px;
+    margin-right: 5px;
+}
+
+body.dark-mode .switch-label {
+    color: #FFFFFF;
+}
+
+/* 开关样式 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+    margin: 0 10px;
+    vertical-align: middle;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #E5E5E5;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #FF7F5C;
+}
+
+input:checked + .slider:before {
+    transform: translateX(30px);
+}
+
+.slider-text {
+    position: absolute;
+    color: #333333;
+    font-size: 12px;
+    line-height: 30px;
+    font-weight: bold;
+}
+
+.slider-text.on {
+    right: 8px;
+    color: #FFFFFF;
+    opacity: 0;
+    transition: .4s;
+}
+
+.slider-text.off {
+    left: 8px;
+    color: #666666;
+    opacity: 1;
+    transition: .4s;
+}
+
+input:checked ~ .slider-text.on {
+    opacity: 1;
+    z-index: 1;
+}
+
+input:checked ~ .slider-text.off {
+    opacity: 0;
+}
+
+/* 深色模式适配 */
+body.dark-mode .slider {
+    background-color: #593224;
+}
+
+body.dark-mode .slider:before {
+    background-color: #FFFFFF;
+}
+
+body.dark-mode input:checked + .slider {
+    background-color: #FF7F5C;
+}
+
+body.dark-mode .slider-text {
+    color: #FFFFFF;
+}
+
+body.dark-mode .slider-text.off {
+    color: #CCCCCC;
 } 
