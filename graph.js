@@ -118,7 +118,8 @@ class GraphEditor {
             edge: {
                 color: '#666666',
                 width: 2,
-                fontSize: 14
+                fontSize: 14,
+                fontColor: '#666666'
             }
         };
     }
@@ -139,6 +140,7 @@ class GraphEditor {
             this.initializeTheme();
             this.initializeZoomControls();
             this.initializeLayouts();
+            this.initializeStylePanel();
             this.initializeExport();
         } catch (error) {
             console.error('初始化组件时出错:', error);
@@ -276,18 +278,19 @@ class GraphEditor {
 
     setTheme(isDark) {
         this.theme = isDark ? {
-            background: '#1E1E1E',  // 深灰色背景
+            background: '#1E1E1E',
             node: {
-                fill: '#2D2D2D',    // 稍浅的深灰色节点
-                stroke: '#4F8BFF',   // 蓝色边框
+                fill: '#2D2D2D',
+                stroke: '#4F8BFF',
                 textColor: '#FFFFFF',
                 radius: 20,
                 fontSize: 14
             },
             edge: {
-                color: '#CCCCCC',    // 更亮的灰色，提高可读性
+                color: '#CCCCCC',
                 width: 2,
-                fontSize: 14
+                fontSize: 14,
+                fontColor: '#CCCCCC'
             }
         } : {
             background: '#FFFFFF',
@@ -301,7 +304,8 @@ class GraphEditor {
             edge: {
                 color: '#666666',
                 width: 2,
-                fontSize: 14
+                fontSize: 14,
+                fontColor: '#666666'
             }
         };
         this.draw();
@@ -562,6 +566,12 @@ class GraphEditor {
                 });
                 this.draw();
                 this.updateGraphStats(); // 重新计算统计信息
+            },
+            'toggleStyle': () => {
+                const stylePanel = document.querySelector('.style-panel');
+                if (stylePanel) {
+                    stylePanel.style.display = stylePanel.style.display === 'none' ? 'block' : 'none';
+                }
             }
         };
 
@@ -1089,7 +1099,7 @@ class GraphEditor {
             const midX = (startX + endX) / 2;
             const midY = (startY + endY) / 2;
             this.ctx.font = `${this.theme.edge.fontSize}px Arial`;
-            this.ctx.fillStyle = this.theme.edge.color;
+            this.ctx.fillStyle = this.theme.edge.fontColor;
             this.ctx.fillText(edge.weight.toString(), midX, midY);
         }
     }
@@ -1921,7 +1931,7 @@ class GraphEditor {
                 text.setAttributeNS(null, 'y', midY);
                 text.setAttributeNS(null, 'text-anchor', 'middle');
                 text.setAttributeNS(null, 'dominant-baseline', 'middle');
-                text.setAttributeNS(null, 'fill', this.theme.edge.color);
+                text.setAttributeNS(null, 'fill', this.theme.edge.fontColor);
                 text.setAttributeNS(null, 'font-size', this.theme.edge.fontSize);
                 text.textContent = edge.weight;
                 g.appendChild(text);
@@ -1970,6 +1980,87 @@ class GraphEditor {
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
+    }
+
+    // 添加样式面板的初始化
+    initializeStylePanel() {
+        const stylePanel = document.querySelector('.style-panel');
+        const header = stylePanel.querySelector('.style-panel-header');
+        const closeButton = stylePanel.querySelector('.close-button');
+        
+        // 关闭按钮
+        closeButton.addEventListener('click', () => {
+            stylePanel.style.display = 'none';
+        });
+
+        // 拖动功能
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        header.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                xOffset = currentX;
+                yOffset = currentY;
+
+                stylePanel.style.transform = 
+                    `translate(${currentX}px, ${currentY}px)`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // 样式控制
+        document.getElementById('nodeSize').addEventListener('input', (e) => {
+            this.theme.node.radius = parseInt(e.target.value);
+            this.draw();
+        });
+
+        document.getElementById('nodeColor').addEventListener('input', (e) => {
+            this.theme.node.fill = e.target.value;
+            this.draw();
+        });
+
+        document.getElementById('edgeWidth').addEventListener('input', (e) => {
+            this.theme.edge.width = parseInt(e.target.value);
+            this.draw();
+        });
+
+        document.getElementById('edgeColor').addEventListener('input', (e) => {
+            this.theme.edge.color = e.target.value;
+            this.draw();
+        });
+
+        document.getElementById('fontSize').addEventListener('input', (e) => {
+            this.theme.node.fontSize = parseInt(e.target.value);
+            this.draw();
+        });
+
+        document.getElementById('edgeFontSize').addEventListener('input', (e) => {
+            this.theme.edge.fontSize = parseInt(e.target.value);
+            this.draw();
+        });
+
+        // 添加边权字体颜色控制
+        document.getElementById('edgeFontColor').addEventListener('input', (e) => {
+            this.theme.edge.fontColor = e.target.value;
+            this.draw();
+        });
     }
 }
 
