@@ -1,0 +1,613 @@
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #F5F1EA;
+    color: #333333;
+}
+
+.container {
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.main-content {
+    display: flex;
+    gap: 20px;
+    height: calc(100vh - 180px);
+    position: relative;
+}
+
+.input-area {
+    width: 300px;
+    padding: 20px;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.canvas-container {
+    flex-grow: 1;
+    position: relative;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 100%;
+    min-width: 0;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stats-panel {
+    width: 250px;
+    padding: 15px;
+    background: #FFFFFF;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-shrink: 0;
+    max-height: 100%;
+    overflow-y: auto;
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stats-panel h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+#graphStats {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.toolbar {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 15px;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 20px;
+    border-right: 1px solid #E5E5E5;
+}
+
+.toolbar-group:last-child {
+    border-right: none;
+}
+
+button {
+    padding: 8px 16px;
+    cursor: pointer;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #333333;
+    transition: all 0.2s;
+}
+
+button:hover {
+    background: #FF7F5C;
+    color: #FFFFFF;
+    border-color: #FF7F5C;
+}
+
+button.selected {
+    background: #FF7F5C;
+    color: #FFFFFF;
+    border-color: #FF7F5C;
+}
+
+.input-group {
+    margin-bottom: 10px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+#nodeCount {
+    width: 100px;
+    padding: 8px;
+}
+
+#graphData {
+    width: 100%;
+    height: 150px;
+    padding: 8px;
+    resize: vertical;
+}
+
+#graphCanvas {
+    display: block;
+    background: white;
+    width: 100%;
+    height: 100%;
+}
+
+.zoom-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 5px;
+}
+
+.zoom-controls button {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.status-bar {
+    padding: 10px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #666;
+}
+
+/* 深色模式 */
+body.dark-mode {
+    background: #1E1E1E;
+    color: #FFFFFF;
+}
+
+body.dark-mode .toolbar,
+body.dark-mode .input-area,
+body.dark-mode .canvas-container,
+body.dark-mode .stats-panel,
+body.dark-mode .style-panel {
+    background: #2D2D2D;
+    border-color: #3D3D3D;
+}
+
+body.dark-mode button {
+    background: #2D2D2D;
+    border-color: #3D3D3D;
+    color: #FFFFFF;
+}
+
+body.dark-mode button:hover,
+body.dark-mode button.selected {
+    background: #4F8BFF;
+    border-color: #4F8BFF;
+}
+
+body.dark-mode select,
+body.dark-mode input,
+body.dark-mode textarea {
+    background: #2D2D2D;
+    border-color: #3D3D3D;
+    color: #FFFFFF;
+}
+
+body.dark-mode #graphCanvas {
+    background: #1e1e1e;
+}
+
+/* 下拉菜单样式 */
+select {
+    padding: 8px;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #333333;
+}
+
+/* 深色模式下拉菜单选项样式 */
+body.dark-mode select option {
+    background: #2D2D2D;
+    color: #FFFFFF;
+}
+
+/* 样式设置面板 */
+.style-panel {
+    position: fixed;
+    width: 250px;
+    right: 20px;
+    top: 200px;
+    background: #FFFFFF;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: none;
+    background: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.style-panel h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.style-group {
+    margin-bottom: 10px;
+}
+
+.style-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #666;
+}
+
+.style-group input[type="range"] {
+    width: 100%;
+}
+
+.style-group input[type="color"] {
+    width: 100%;
+    height: 30px;
+    padding: 2px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 深色模式适配 */
+body.dark-mode .style-panel {
+    background: #2d2d2d;
+    border-color: #444;
+}
+
+body.dark-mode .style-panel h3,
+body.dark-mode .style-group label {
+    color: #fff;
+}
+
+.style-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    cursor: move;
+    user-select: none;
+    padding: 5px;
+}
+
+.style-panel-header:hover {
+    background: #f5f5f5;
+}
+
+.style-panel-header h3 {
+    margin: 0;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.close-button:hover {
+    color: #ff4444;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+    padding: 8px;
+    border: 1px solid #E5E5E5;
+    border-radius: 6px;
+    background: #FFFFFF;
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px;
+    color: #333333;
+    border-radius: 6px;
+    transition: all 0.2s;
+    margin-left: 10px;
+}
+
+.github-link:hover {
+    background: #FF7F5C;
+    color: #FFFFFF;
+}
+
+body.dark-mode .github-link {
+    color: #FFFFFF;
+}
+
+body.dark-mode .github-link:hover {
+    background: #FF7F5C;
+}
+
+/* 基础响应式设计 */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        margin: 10px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .toolbar-group {
+        flex-wrap: wrap;
+        padding-right: 0;
+        border-right: none;
+        border-bottom: 1px solid #E5E5E5;
+        padding-bottom: 10px;
+    }
+
+    .toolbar-group:last-child {
+        border-bottom: none;
+    }
+
+    .main-content {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .input-area {
+        width: auto;
+    }
+
+    .canvas-container {
+        height: 60vh;
+    }
+
+    .stats-panel {
+        width: auto;
+    }
+
+    button {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    select {
+        width: 100%;
+    }
+
+    .style-panel {
+        width: 90%;
+        right: 5%;
+        left: 5%;
+    }
+
+    .zoom-controls {
+        bottom: 10px;
+        right: 10px;
+    }
+
+    .zoom-controls button {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+}
+
+/* 添加触摸事件支持 */
+@media (hover: none) {
+    button:hover {
+        background: #FFFFFF;
+        color: #333333;
+    }
+
+    button:active {
+        background: #FF7F5C;
+        color: #FFFFFF;
+    }
+}
+
+/* 移动设备优化 */
+@media (max-width: 768px) {
+    .toolbar button {
+        min-height: 44px; /* 更大的触摸目标 */
+        font-size: 16px;
+    }
+
+    .zoom-controls button {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+    }
+
+    .input-area {
+        max-height: 30vh;
+        overflow-y: auto;
+    }
+
+    #graphData {
+        height: 100px;
+    }
+
+    .style-panel {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    /* 防止iOS上的橡皮筋效果 */
+    .canvas-container {
+        overflow: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* 禁用页面缩放 */
+@viewport {
+    width: device-width;
+    zoom: 1.0;
+    user-zoom: fixed;
+}
+
+/* 复选框和标签样式 */
+input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+input[type="checkbox"] + label {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* 深色模式适配 */
+body.dark-mode input[type="checkbox"] + label {
+    color: #FFFFFF;
+}
+
+/* 开关标签样式 */
+.switch-label {
+    font-size: 14px;
+    margin-right: 5px;
+}
+
+body.dark-mode .switch-label {
+    color: #FFFFFF;
+}
+
+/* 开关样式 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+    margin: 0 10px;
+    vertical-align: middle;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #E5E5E5;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #FF7F5C;
+}
+
+input:checked + .slider:before {
+    transform: translateX(30px);
+}
+
+.slider-text {
+    position: absolute;
+    color: #333333;
+    font-size: 12px;
+    line-height: 30px;
+    font-weight: bold;
+}
+
+.slider-text.on {
+    right: 8px;
+    color: #FFFFFF;
+    opacity: 0;
+    transition: .4s;
+}
+
+.slider-text.off {
+    left: 8px;
+    color: #666666;
+    opacity: 1;
+    transition: .4s;
+}
+
+input:checked ~ .slider-text.on {
+    opacity: 1;
+    z-index: 1;
+}
+
+input:checked ~ .slider-text.off {
+    opacity: 0;
+}
+
+/* 深色模式适配 */
+body.dark-mode .slider {
+    background-color: #593224;
+}
+
+body.dark-mode .slider:before {
+    background-color: #FFFFFF;
+}
+
+body.dark-mode input:checked + .slider {
+    background-color: #FF7F5C;
+}
+
+body.dark-mode .slider-text {
+    color: #FFFFFF;
+}
+
+body.dark-mode .slider-text.off {
+    color: #CCCCCC;
+}
+
+.theme-toggle {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    line-height: 1;
+}
+
+body.dark-mode .theme-toggle {
+    background: #2D2D2D;
+    border-color: #3D3D3D;
+    color: #FFFFFF;
+} 
